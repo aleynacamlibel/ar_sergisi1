@@ -1,1 +1,84 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>23 Nisan Kutlu Olsun!</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #fdfdfd;
+            color: #333;
+        }
+        header {
+            background-color: #e63946; /* Türk Bayrağı Kırmızısı */
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 40px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        .photo-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .photo-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        .photo-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover; /* Fotoğrafları bozmadan kutuya sığdırır */
+        }
+        .caption {
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            color: #457b9d;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
 
+<header>
+    <h1>🇹🇷 23 Nisan Dijital Sergimiz 🇹🇷</h1>
+    <p>Ulusal Egemenlik ve Çocuk Bayramı Kutlu Olsun!</p>
+</header>
+
+<div class="gallery">
+    <div class="photo-card">
+        <img src="images/foto1.jpg" alt="23 Nisan Fotoğrafı">
+        <div class="caption">Günün Anlam ve Önemi</div>
+    </div>
+    
+    <div class="photo-card">
+        <img src="images/foto2.jpg" alt="23 Nisan Fotoğrafı">
+        <div class="caption">Neşeyle Kutluyoruz</div>
+    </div>
+    
+    </div>
+
+<footer>
+    Hazırlayan: [Adın Soyadın] | 2026
+</footer>
+
+</body>
+</html>
