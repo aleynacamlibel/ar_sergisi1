@@ -1,32 +1,31 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>23 Nisan AR</title>
+    <title>23 Nisan AR Sergisi</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    
     <style>
         body { margin: 0; overflow: hidden; }
-        /* Başlat butonu - Mobil tarayıcı izinleri için şarttır */
-        #start-overlay {
+        #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 9999;
+            background: rgba(0,0,0,0.8); z-index: 1000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white; font-family: sans-serif;
+            color: white; font-family: sans-serif; text-align: center;
         }
-        #btn {
-            padding: 15px 40px; font-size: 18px; cursor: pointer;
-            background: #d4212d; color: white; border: none; border-radius: 50px;
+        button {
+            padding: 15px 30px; font-size: 18px; cursor: pointer;
+            background: #D4212D; color: white; border: none; border-radius: 50px;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
 
-    <div id="start-overlay">
-        <h2>Atatürk AR Sergisi</h2>
-        <button id="btn">DENEYİMİ BAŞLAT</button>
-        <p style="margin-top: 20px; font-size: 12px; opacity: 0.6;">Kamera izni vermeyi unutmayın.</p>
+    <div id="overlay">
+        <h2>23 Nisan AR Deneyimi</h2>
+        <p>Kamerayı açmak için aşağıdaki butona basın.</p>
+        <button id="start-btn">KAMERAYI BAŞLAT</button>
     </div>
 
     <a-scene 
@@ -37,52 +36,39 @@
         device-orientation-permission-ui="enabled: false">
         
         <a-assets>
-            <video id="arVideo" src="video.mp4" 
-                preload="auto" loop="true" crossorigin="anonymous" 
-                webkit-playsinline playsinline>
-            </video>
+            <video id="ar-video" src="video.mp4" preload="auto" loop="true" 
+                   crossorigin="anonymous" webkit-playsinline playsinline></video>
         </a-assets>
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
         <a-entity id="target" mindar-image-target="targetIndex: 0">
-            <a-video src="#arVideo" width="1" height="0.56" position="0 0 0"></a-video>
+            <a-video src="#ar-video" width="1" height="0.56" position="0 0 0"></a-video>
         </a-entity>
     </a-scene>
 
     <script>
-        const btn = document.querySelector('#btn');
-        const overlay = document.querySelector('#start-overlay');
-        const video = document.querySelector('#arVideo');
+        const startBtn = document.querySelector('#start-btn');
+        const overlay = document.querySelector('#overlay');
         const sceneEl = document.querySelector('a-scene');
+        const video = document.querySelector('#ar-video');
 
-        btn.addEventListener('click', () => {
+        startBtn.addEventListener('click', () => {
             overlay.style.display = 'none';
             
-            // Video oynatma izni al (iOS için kritik)
-            video.play().then(() => {
-                video.pause();
-            });
-
-            // AR Sistemini Manuel Başlat (Hata riskini azaltır)
-            const { systems } = sceneEl;
-            systems['mindar-image-system'].start();
+            // Video ve AR sistemini başlat
+            video.play().then(() => video.pause()); 
+            sceneEl.systems['mindar-image-system'].start();
         });
 
-        const target = document.querySelector('#target');
-        
-        target.addEventListener("targetFound", () => {
-            video.play();
-        });
-
-        target.addEventListener("targetLost", () => {
-            video.pause();
-        });
-        
-        // Hata ayıklama: Dosya yüklenemezse uyar
+        // HATA KONTROLÜ: Eğer targets.mind yüklenemezse haber ver
         sceneEl.addEventListener("arError", (event) => {
-            alert("AR Başlatılamadı! Lütfen targets.mind dosyasının adını kontrol edin.");
+            alert("Hata: targets.mind dosyasına ulaşılamıyor! Lütfen GitHub'da dosya adının doğruluğunu kontrol edin.");
         });
+
+        const targetEntity = document.querySelector('#target');
+        targetEntity.addEventListener("targetFound", () => video.play());
+        targetEntity.addEventListener("targetLost", () => video.pause());
     </script>
 </body>
 </html>
