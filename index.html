@@ -1,65 +1,84 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>23 Nisan AR</title>
+<html lang="tr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Atatürk AR Sergisi</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    
     <style>
-      body { margin: 0; overflow: hidden; }
-      /* Yükleme ekranı takılmasın diye manuel bir başlat düğmesi ekleyelim */
-      #ui {
-        position: fixed; z-index: 1000; bottom: 20px; left: 50%;
-        transform: translateX(-50%);
-      }
-      button { padding: 12px 24px; border-radius: 20px; border: none; background: #c00; color: white; font-weight: bold; }
+        body { margin: 0; overflow: hidden; }
+        /* Başlat butonu: iOS ve Android'de video sesi için şarttır */
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; font-family: sans-serif;
+        }
+        #start-btn {
+            padding: 15px 30px; font-size: 18px; cursor: pointer;
+            background: #d4212d; color: white; border: none; border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
 
-    <div id="ui">
-      <button id="startButton">Sesi Aç ve Başlat</button>
+    <div id="start-screen">
+        <h2 style="margin-bottom: 20px;">23 Nisan AR Sergisi</h2>
+        <button id="start-btn">KAMERAYI AÇ VE BAŞLAT</button>
+        <p style="margin-top: 15px; font-size: 12px; opacity: 0.7;">Lütfen kamera izni verin.</p>
     </div>
 
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes;" 
-      color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
-      vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false">
-      
-      <a-assets>
-        <video id="ataturkVideo" src="video.mp4" 
-               preload="auto" loop="true" crossorigin="anonymous" 
-               webkit-playsinline playsinline muted></video>
-      </a-assets>
+        mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: yes; uiScanning: yes;" 
+        color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false">
+        
+        <a-assets>
+            <video id="arVideo" src="video.mp4" 
+                preload="auto" loop="true" crossorigin="anonymous" 
+                webkit-playsinline playsinline>
+            </video>
+        </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <a-entity id="example-target" mindar-image-target="targetIndex: 0">
-        <a-video src="#ataturkVideo" width="1" height="0.56" position="0 0 0"></a-video>
-      </a-entity>
+        <a-entity id="target0" mindar-image-target="targetIndex: 0">
+            <a-video src="#arVideo" width="1" height="0.56" position="0 0 0" rotation="0 0 0"></a-video>
+        </a-entity>
     </a-scene>
 
     <script>
-      const video = document.querySelector('#ataturkVideo');
-      const button = document.querySelector('#startButton');
-      const target = document.querySelector('#example-target');
+        const startBtn = document.querySelector('#start-btn');
+        const startScreen = document.querySelector('#start-screen');
+        const video = document.querySelector('#arVideo');
+        const sceneEl = document.querySelector('a-scene');
 
-      // Butona basıldığında videonun sesini açar ve tam yetki alır
-      button.addEventListener('click', () => {
-        video.muted = false;
-        video.play();
-        button.style.display = 'none'; // Butonu gizle
-      });
+        startBtn.addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            
+            // Videoyu "uyandır" (iOS için kritik)
+            video.play().then(() => {
+                video.pause(); 
+            });
 
-      target.addEventListener("targetFound", () => {
-        video.play();
-      });
+            // AR Sistemini başlat
+            sceneEl.systems['mindar-image-system'].start();
+        });
 
-      target.addEventListener("targetLost", () => {
-        video.pause();
-      });
+        const targetEntity = document.querySelector('#target0');
+        
+        targetEntity.addEventListener("targetFound", () => {
+            console.log("Atatürk bulundu");
+            video.play();
+        });
+
+        targetEntity.addEventListener("targetLost", () => {
+            video.pause();
+        });
     </script>
-  </body>
+</body>
 </html>
