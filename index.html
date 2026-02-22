@@ -7,26 +7,53 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
     
     <style>
-      body { margin: 0; overflow: hidden; }
-      /* Başlatma butonu (iOS için şart) */
-      #ui-layer {
-        position: absolute; z-index: 1000; bottom: 20px; left: 50%;
-        transform: translateX(-50%);
+      body { margin: 0; overflow: hidden; font-family: sans-serif; }
+
+      /* Sağ Üst Versiyon Bilgisi */
+      #version-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 2000;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 5px;
+        font-size: 12px;
       }
+
+      /* Başlatma Butonu */
+      #ui-layer {
+        position: absolute;
+        z-index: 1000;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+      }
+
       button {
-        padding: 10px 20px; border-radius: 20px; border: none;
-        background: #e61919; color: white; font-weight: bold;
+        padding: 12px 25px;
+        border-radius: 30px;
+        border: none;
+        background: #e61919;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       }
     </style>
   </head>
   <body>
 
+    <div id="version-tag">v1.0</div>
+
     <div id="ui-layer">
-      <button id="startButton">AR'ı BAŞLAT / VİDEOYU OYNAT</button>
+      <button id="startButton">KAMERAYI AÇ VE BAŞLAT</button>
     </div>
 
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;" 
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" 
       color-space="sRGB" 
       renderer="colorManagement: true, physicallyCorrectLights" 
       vr-mode-ui="enabled: false" 
@@ -35,7 +62,8 @@
       <a-assets>
         <video id="ar-video" 
                src="./Egemenliğin ışığı, çocukların neşesiyle parlıyor.10.mp4" 
-               preload="auto" loop="true" 
+               preload="auto" 
+               loop="true" 
                crossorigin="anonymous" 
                playsinline 
                webkit-playsinline>
@@ -54,21 +82,24 @@
       const startButton = document.querySelector('#startButton');
       const video = document.querySelector('#ar-video');
 
+      // Başlat butonu mantığı
       startButton.addEventListener('click', () => {
-        // AR'ı başlat
+        // AR sistemini ve kamerayı başlatır
         sceneEl.systems["mindar-image-system"].start();
-        // Videoyu "hazır" duruma getir
+        
+        // Videoyu "hazır" (muted/play) moduna sokar (iOS için kritik)
         video.play();
-        // UI'ı gizle
+        
+        // Arayüzü gizle
         document.querySelector('#ui-layer').style.display = 'none';
       });
 
-      // Target bulunduğunda videoyu oynat, kaybolunca duraklat
+      // Görsel tanındığında videoyu otomatik oynat / durdur
       const targetEntity = document.querySelector('#target');
-      targetEntity.addEventListener("targetFound", event => {
+      targetEntity.addEventListener("targetFound", () => {
         video.play();
       });
-      targetEntity.addEventListener("targetLost", event => {
+      targetEntity.addEventListener("targetLost", () => {
         video.pause();
       });
     </script>
