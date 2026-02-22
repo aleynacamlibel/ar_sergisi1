@@ -2,34 +2,35 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>23 Nisan AR Sergisi</title>
+    <title>23 Nisan AR</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; }
+        body { margin: 0; overflow: hidden; background: #000; }
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 1000;
+            background: rgba(0,0,0,0.9); z-index: 1000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white; font-family: sans-serif; text-align: center;
+            color: white; font-family: sans-serif; text-align: center; padding: 20px;
         }
         button {
-            padding: 15px 30px; font-size: 18px; cursor: pointer;
+            padding: 20px 40px; font-size: 20px; cursor: pointer;
             background: #D4212D; color: white; border: none; border-radius: 50px;
-            margin-top: 20px;
+            font-weight: bold;
         }
+        #error-msg { color: #ffeb3b; margin-top: 20px; font-size: 14px; display: none; }
     </style>
 </head>
 <body>
 
     <div id="overlay">
-        <h2>23 Nisan AR Deneyimi</h2>
-        <p>Kamerayı açmak için aşağıdaki butona basın.</p>
-        <button id="start-btn">KAMERAYI BAŞLAT</button>
+        <h2 id="status-title">Sergi Yükleniyor...</h2>
+        <button id="start-btn" style="display: none;">BAŞLAT</button>
+        <div id="error-msg"></div>
     </div>
 
     <a-scene 
-        mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: yes;" 
+        mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" 
         color-space="sRGB" 
         renderer="colorManagement: true, physicallyCorrectLights" 
         vr-mode-ui="enabled: false" 
@@ -49,26 +50,36 @@
 
     <script>
         const startBtn = document.querySelector('#start-btn');
+        const statusTitle = document.querySelector('#status-title');
+        const errorMsg = document.querySelector('#error-msg');
         const overlay = document.querySelector('#overlay');
         const sceneEl = document.querySelector('a-scene');
-        const video = document.querySelector('#ar-video');
+
+        // DOSYA KONTROLÜ (Bu kısım hatayı bulacak)
+        fetch('targets.mind')
+            .then(response => {
+                if (response.ok) {
+                    statusTitle.innerText = "Sistem Hazır!";
+                    startBtn.style.display = "block";
+                } else {
+                    throw new Error("targets.mind dosyası bu klasörde bulunamadı (404)!");
+                }
+            })
+            .catch(err => {
+                statusTitle.innerText = "Bağlantı Hatası!";
+                errorMsg.style.display = "block";
+                errorMsg.innerText = err.message + " | Lütfen dosya adını GitHub'dan kontrol edin.";
+            });
 
         startBtn.addEventListener('click', () => {
             overlay.style.display = 'none';
-            
-            // Video ve AR sistemini başlat
-            video.play().then(() => video.pause()); 
+            document.querySelector('#ar-video').play().then(() => document.querySelector('#ar-video').pause());
             sceneEl.systems['mindar-image-system'].start();
         });
 
-        // HATA KONTROLÜ: Eğer targets.mind yüklenemezse haber ver
-        sceneEl.addEventListener("arError", (event) => {
-            alert("Hata: targets.mind dosyasına ulaşılamıyor! Lütfen GitHub'da dosya adının doğruluğunu kontrol edin.");
-        });
-
         const targetEntity = document.querySelector('#target');
-        targetEntity.addEventListener("targetFound", () => video.play());
-        targetEntity.addEventListener("targetLost", () => video.pause());
+        targetEntity.addEventListener("targetFound", () => document.querySelector('#ar-video').play());
+        targetEntity.addEventListener("targetLost", () => document.querySelector('#ar-video').pause());
     </script>
 </body>
 </html>
