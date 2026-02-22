@@ -1,91 +1,89 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>23 Nisan AR Sergisi</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    
     <style>
-      body { margin: 0; overflow: hidden; font-family: sans-serif; }
-      /* Yükleme ekranı ve Başlat butonu */
-      #overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.7); display: flex; justify-content: center;
-        align-items: center; z-index: 9999; color: white; text-align: center;
-      }
-      #start-button {
-        padding: 15px 30px; font-size: 18px; cursor: pointer;
-        background: #e63946; color: white; border: none; border-radius: 25px;
-      }
+        body { margin: 0; overflow: hidden; }
+        /* Başlat butonu ve yükleme ekranı */
+        #ui-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 999; color: white;
+        }
+        #start-btn {
+            padding: 15px 35px; font-size: 20px; background: #D4212D;
+            color: white; border: none; border-radius: 50px; cursor: pointer;
+        }
+        /* Tarama devam ederken kullanıcıya yol gösteren çerçeve */
+        #scanning-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            border: 5px solid rgba(255,255,255,0.3); box-sizing: border-box;
+            display: none; pointer-events: none; z-index: 100;
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
 
-    <div id="overlay">
-      <div>
-        <h2>23 Nisan AR Sergisi</h2>
-        <p>Deneyimi başlatmak için butona basıp<br>kameraya izin verin.</p>
-        <button id="start-button">DENEYİMİ BAŞLAT</button>
-      </div>
+    <div id="ui-overlay">
+        <h2>23 Nisan AR Deneyimi</h2>
+        <p>Fotoğrafı taramak için kamerayı açın</p>
+        <button id="start-btn">KAMERAYI AÇ</button>
     </div>
 
+    <div id="scanning-overlay"></div>
+
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;" 
-      color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
-      vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false">
-      
-      <a-assets>
-        <video id="ar-video" 
-               src="./video.mp4" 
-               preload="auto" 
-               loop="true" 
-               crossorigin="anonymous" 
-               webkit-playsinline 
-               playsinline>
-        </video>
-      </a-assets>
+        mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: #scanning-overlay;" 
+        color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false">
+        
+        <a-assets>
+            <video id="ar-video" src="video.mp4" 
+                preload="auto" loop="true" crossorigin="anonymous" 
+                webkit-playsinline playsinline>
+            </video>
+        </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <a-entity id="target-anchor" mindar-image-target="targetIndex: 0">
-        <a-video src="#ar-video" width="1" height="0.56" position="0 0 0"></a-video>
-      </a-entity>
+        <a-entity id="target" mindar-image-target="targetIndex: 0">
+            <a-video src="#ar-video" width="1" height="0.56" position="0 0 0"></a-video>
+        </a-entity>
     </a-scene>
 
     <script>
-      const startButton = document.querySelector('#start-button');
-      const overlay = document.querySelector('#overlay');
-      const sceneEl = document.querySelector('a-scene');
-      const video = document.querySelector('#ar-video');
-      const targetEntity = document.querySelector('#target-anchor');
+        const startBtn = document.querySelector('#start-btn');
+        const overlay = document.querySelector('#ui-overlay');
+        const scanningOverlay = document.querySelector('#scanning-overlay');
+        const sceneEl = document.querySelector('a-scene');
+        const video = document.querySelector('#ar-video');
+        const targetEntity = document.querySelector('#target');
 
-      // Butona tıklandığında sistemi başlat
-      startButton.addEventListener('click', () => {
-        overlay.style.display = 'none';
-        
-        // Videoyu "hazırla" (iOS'ta sessiz başlatıp sonra açmak en garantisidir)
-        video.play().then(() => {
-            video.pause(); // Sadece tarayıcıya "kullanıcı onay verdi" demek için
+        startBtn.addEventListener('click', () => {
+            overlay.style.display = 'none';
+            scanningOverlay.style.display = 'block';
+            
+            // Mobil tarayıcılar için video ve sistem tetiklemesi
+            video.load(); 
+            sceneEl.systems['mindar-image-system'].start();
         });
 
-        // AR Sistemini başlat
-        const { systems } = sceneEl;
-        systems['mindar-image-system'].start(); 
-      });
+        targetEntity.addEventListener("targetFound", () => {
+            console.log("Hedef algılandı!");
+            scanningOverlay.style.display = 'none'; // Tarama çerçevesini gizle
+            video.play();
+        });
 
-      // Hedef bulunduğunda videoyu oynat
-      targetEntity.addEventListener("targetFound", () => {
-        console.log("Atatürk fotoğrafı bulundu!");
-        video.play();
-      });
-
-      // Hedef kaybedildiğinde videoyu duraklat
-      targetEntity.addEventListener("targetLost", () => {
-        video.pause();
-      });
+        targetEntity.addEventListener("targetLost", () => {
+            console.log("Hedef kaybedildi.");
+            scanningOverlay.style.display = 'block'; // Tekrar tarama çerçevesini göster
+            video.pause();
+        });
     </script>
-  </body>
+</body>
 </html>
