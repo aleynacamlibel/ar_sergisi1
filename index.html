@@ -1,85 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>23 Nisan AR</title>
+    <title>23 Nisan AR Sergisi v1.1</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; }
+        body { margin: 0; overflow: hidden; background-color: #000; }
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); z-index: 1000;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white; font-family: sans-serif; text-align: center; padding: 20px;
+            color: white; font-family: sans-serif; text-align: center;
         }
-        button {
-            padding: 20px 40px; font-size: 20px; cursor: pointer;
+        #start-btn {
+            padding: 15px 40px; font-size: 20px; cursor: pointer;
             background: #D4212D; color: white; border: none; border-radius: 50px;
-            font-weight: bold;
+            font-weight: bold; display: none; /* Dosya yüklenene kadar gizli */
         }
-        #error-msg { color: #ffeb3b; margin-top: 20px; font-size: 14px; display: none; }
+        #loader-text { margin-bottom: 20px; font-size: 18px; }
     </style>
 </head>
 <body>
 
     <div id="overlay">
-        <h2 id="status-title">Sergi Yükleniyor...</h2>
-        <button id="start-btn" style="display: none;">BAŞLAT</button>
-        <div id="error-msg"></div>
+        <div id="loader-text">Dosyalar Doğrulanıyor...</div>
+        <button id="start-btn">SERGİYİ BAŞLAT</button>
     </div>
 
     <a-scene 
-        mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no;" 
+        mindar-image="imageTargetSrc: targets.mind?v=1.1; autoStart: false; uiLoading: no; uiScanning: no;" 
         color-space="sRGB" 
         renderer="colorManagement: true, physicallyCorrectLights" 
         vr-mode-ui="enabled: false" 
         device-orientation-permission-ui="enabled: false">
         
         <a-assets>
-            <video id="ar-video" src="video.mp4" preload="auto" loop="true" 
+            <video id="arVideo" src="video.mp4?v=1.1" preload="auto" loop="true" 
                    crossorigin="anonymous" webkit-playsinline playsinline></video>
         </a-assets>
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
         <a-entity id="target" mindar-image-target="targetIndex: 0">
-            <a-video src="#ar-video" width="1" height="0.56" position="0 0 0"></a-video>
+            <a-video src="#arVideo" width="1" height="0.56" position="0 0 0"></a-video>
         </a-entity>
     </a-scene>
 
     <script>
-        const startBtn = document.querySelector('#start-btn');
-        const statusTitle = document.querySelector('#status-title');
-        const errorMsg = document.querySelector('#error-msg');
-        const overlay = document.querySelector('#overlay');
+        const btn = document.querySelector('#start-btn');
+        const loaderText = document.querySelector('#loader-text');
         const sceneEl = document.querySelector('a-scene');
 
-        // DOSYA KONTROLÜ (Bu kısım hatayı bulacak)
-        fetch('targets.mind')
-            .then(response => {
-                if (response.ok) {
-                    statusTitle.innerText = "Sistem Hazır!";
-                    startBtn.style.display = "block";
+        // Dosya kontrol mekanizması (Versiyonlu kontrol)
+        fetch('targets.mind?v=1.1')
+            .then(res => {
+                if(res.ok) {
+                    loaderText.innerText = "Yükleme Tamamlandı!";
+                    btn.style.display = "block";
                 } else {
-                    throw new Error("targets.mind dosyası bu klasörde bulunamadı (404)!");
+                    loaderText.style.color = "yellow";
+                    loaderText.innerText = "HATA: targets.mind dosyası klasörde bulunamadı!";
                 }
             })
-            .catch(err => {
-                statusTitle.innerText = "Bağlantı Hatası!";
-                errorMsg.style.display = "block";
-                errorMsg.innerText = err.message + " | Lütfen dosya adını GitHub'dan kontrol edin.";
+            .catch(() => {
+                loaderText.innerText = "Bağlantı hatası oluştu.";
             });
 
-        startBtn.addEventListener('click', () => {
-            overlay.style.display = 'none';
-            document.querySelector('#ar-video').play().then(() => document.querySelector('#ar-video').pause());
+        btn.addEventListener('click', () => {
+            document.querySelector('#overlay').style.display = 'none';
+            const video = document.querySelector('#arVideo');
+            video.play().then(() => video.pause()); 
             sceneEl.systems['mindar-image-system'].start();
         });
 
-        const targetEntity = document.querySelector('#target');
-        targetEntity.addEventListener("targetFound", () => document.querySelector('#ar-video').play());
-        targetEntity.addEventListener("targetLost", () => document.querySelector('#ar-video').pause());
+        const target = document.querySelector('#target');
+        target.addEventListener("targetFound", () => document.querySelector('#arVideo').play());
+        target.addEventListener("targetLost", () => document.querySelector('#arVideo').pause());
     </script>
 </body>
 </html>
